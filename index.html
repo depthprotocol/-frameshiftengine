@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$DEPTH: Frame Shift Check-in</title>
+    <!-- Tailwind CSS CDN for quick, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue background */
+        }
+        .card {
+            background-color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .header-bg {
+            background-color: #0077b6; /* Deep Ocean Blue */
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="card w-full max-w-lg rounded-xl overflow-hidden">
+        
+        <!-- Header -->
+        <header class="header-bg p-6">
+            <h1 class="text-3xl font-extrabold text-center">$DEPTH: Frame Shift Engine V1</h1>
+            <p class="text-center mt-1 text-sm opacity-90">Proof of Growth (PoG) - Check-in</p>
+        </header>
+
+        <!-- Status & Balance -->
+        <div class="p-6 border-b border-gray-100 flex justify-between text-sm">
+            <div id="auth-status" class="font-medium">
+                <span class="text-yellow-600">Connecting...</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="font-bold text-gray-700">d-PNT Balance:</span>
+                <span id="depth-points" class="text-xl font-extrabold text-[#0077b6]">0</span>
+            </div>
+        </div>
+        
+        <!-- Frame Shift Form -->
+        <div class="p-6">
+            <p class="text-gray-600 mb-6 text-sm">Log your conscious choice to mint a **Depth Point** ($\text{d-PNT}$).</p>
+
+            <form id="frame-shift-form" class="space-y-4">
+                
+                <!-- Input 1: The Trigger -->
+                <div>
+                    <label for="trigger" class="block text-sm font-semibold text-gray-700 mb-1">1. The Trigger (The Event)</label>
+                    <textarea id="trigger" rows="2" required placeholder="What external event or internal feeling occurred? (e.g., 'A harsh email from a boss,' 'Feeling overwhelmed by my to-do list')"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-sm"></textarea>
+                </div>
+
+                <!-- Input 2: The Old Frame -->
+                <div>
+                    <label for="old-frame" class="block text-sm font-semibold text-gray-700 mb-1">2. The Old Frame (Reactive Thought)</label>
+                    <textarea id="old-frame" rows="2" required placeholder="What was your initial, reactive thought? (e.g., 'This project is impossible, I should quit,' 'They are intentionally disrespecting me')"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-sm"></textarea>
+                </div>
+                
+                <!-- Input 3: The New Frame -->
+                <div>
+                    <label for="new-frame" class="block text-sm font-semibold text-gray-700 mb-1">3. The New Frame (Conscious Choice)</label>
+                    <textarea id="new-frame" rows="3" required placeholder="What is the new, constructive frame you are choosing? (e.g., 'This is a challenge I can break down and master,' 'I can choose to be steady and respond with clarity')"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-sm"></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn" disabled
+                    class="w-full py-3 px-4 bg-[#0077b6] text-white font-bold rounded-lg hover:bg-[#005f95] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-300">
+                    Mint d-PNT & Log Proof of Shift
+                </button>
+            </form>
+            
+            <!-- Message Area -->
+            <div id="message-box" class="mt-4 p-3 hidden rounded-lg text-sm font-medium" role="alert"></div>
+
+        </div>
+    </div>
+
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, signInAnonymously, onAuthStateChanged, 
+            signInWithCustomToken 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, query, where, doc, getDocs, 
+            addDoc, setDoc, updateDoc, onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // GLOBAL VARIABLES (CRITICAL FOR CANVAS EXECUTION)
+        // These are guaranteed to be defined in the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId = null;
+        let isAuthReady = false;
+
+        // UI elements
+        const authStatusEl = document.getElementById('auth-status');
+        const depthPointsEl = document.getElementById('depth-points');
+        const submitBtn = document.getElementById('submit-btn');
+        const messageBox = document.getElementById('message-box');
+        const form = document.getElementById('frame-shift-form');
+
+        // Utility function for message box
+        const showMessage = (text, type = 'success') => {
+            messageBox.textContent = text;
+            messageBox.className = 'mt-4 p-3 rounded-lg text-sm font-medium';
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                messageBox.classList.add('bg-green-100', 'text-green-700');
+            }
+        };
+
+        // --- FIREBASE INITIALIZATION & AUTH ---
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    authStatusEl.innerHTML = `<span class="text-green-600">Auth Ready!</span> (User: ${userId.substring(0, 8)}...)`;
+                    submitBtn.disabled = false;
+                    isAuthReady = true;
+                    // Start listening to the d-PNT balance
+                    listenForDepthPoints();
+                } else {
+                    // Sign in anonymously if no user is found
+                    authStatusEl.innerHTML = `<span class="text-yellow-600">Signing in...</span>`;
+                    try {
+                        if (initialAuthToken) {
+                             await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Firebase Auth Error:", error);
+                        authStatusEl.innerHTML = `<span class="text-red-600">Auth Failed: ${error.code}</span>`;
+                        showMessage('Authentication failed. Check your Firebase config and Anonymous Auth setting.', 'error');
+                    }
+                }
+            });
+        } else {
+            authStatusEl.innerHTML = `<span class="text-red-600">FATAL: Firebase Config Missing</span>`;
+            showMessage('Firebase configuration not found. Please provide credentials.', 'error');
+        }
+
+
+        // --- FIRESTORE LISTENERS ---
+        
+        /**
+         * Listens to the user's document to track and update the d-PNT balance.
+         * The balance is stored in the private /users collection.
+         */
+        const listenForDepthPoints = () => {
+            if (!db || !userId) return;
+
+            // Path: /artifacts/{appId}/users/{userId}/user_profile/{userId}
+            const userDocRef = doc(db, 
+                `artifacts/${appId}/users/${userId}/user_profile`, userId
+            );
+
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const currentPoints = data.depthPoints || 0;
+                    depthPointsEl.textContent = currentPoints;
+                    console.log(`d-PNT Balance Updated: ${currentPoints}`);
+                } else {
+                    // Create the initial profile if it doesn't exist
+                    setDoc(userDocRef, { 
+                        userId: userId, 
+                        depthPoints: 0,
+                        lastShiftDate: null,
+                        joinDate: new Date() 
+                    }).then(() => {
+                        console.log("Initialized user profile.");
+                        depthPointsEl.textContent = 0;
+                    }).catch(e => console.error("Error setting initial profile:", e));
+                }
+            }, (error) => {
+                console.error("Error listening to d-PNT balance:", error);
+            });
+        };
+
+
+        // --- FORM SUBMISSION ---
+
+        /**
+         * Logs the Frame Shift entry and simulates minting 1 d-PNT.
+         */
+        const logFrameShift = async (event) => {
+            event.preventDefault();
+            
+            if (!isAuthReady || !userId) {
+                showMessage('Authentication not ready. Please wait.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging Shift...';
+
+            const trigger = document.getElementById('trigger').value.trim();
+            const oldFrame = document.getElementById('old-frame').value.trim();
+            const newFrame = document.getElementById('new-frame').value.trim();
+
+            if (!trigger || !oldFrame || !newFrame) {
+                showMessage('Please fill out all three fields.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Mint d-PNT & Log Proof of Shift';
+                return;
+            }
+
+            const frameShiftData = {
+                userId: userId,
+                trigger: trigger,
+                oldFrame: oldFrame,
+                newFrame: newFrame,
+                timestamp: new Date().toISOString(),
+                // This field serves as the verifiable Proof of Consciousness Logging (PCL)
+                isVerified: true 
+            };
+
+            try {
+                // 1. Log the Frame Shift entry to the public ledger for audit/verification
+                // Path: /artifacts/{appId}/public/data/frame_shifts
+                const shiftsCollectionRef = collection(db, 
+                    `artifacts/${appId}/public/data/frame_shifts`
+                );
+                await addDoc(shiftsCollectionRef, frameShiftData);
+                console.log("Frame Shift Logged successfully.");
+
+                // 2. Mint the d-PNT (Update the private user balance)
+                // We use an update function to increment the counter
+                const userDocRef = doc(db, 
+                    `artifacts/${appId}/users/${userId}/user_profile`, userId
+                );
+                
+                await updateDoc(userDocRef, {
+                    depthPoints: depthPointsEl.textContent ? parseInt(depthPointsEl.textContent) + 1 : 1,
+                    lastShiftDate: frameShiftData.timestamp
+                });
+                
+                showMessage('Proof of Shift recorded! +1 d-PNT MINTED.', 'success');
+                form.reset();
+
+            } catch (error) {
+                console.error("Error logging Frame Shift or minting d-PNT:", error);
+                showMessage(`Error: Failed to log shift. Check console for details.`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Mint d-PNT & Log Proof of Shift';
+            }
+        };
+
+        if (form) {
+            form.addEventListener('submit', logFrameShift);
+        }
+    </script>
+</body>
+</html>
