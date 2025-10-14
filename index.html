@@ -21,12 +21,6 @@
             transition: all 0.2s; 
             border: none;
         }
-        .config-warning { 
-            background-color: #4a1e1e; 
-            border-color: #8b3434; 
-            padding: 0.75rem; 
-            border-radius: 0.5rem; 
-        }
         /* Custom style for the countdown text */
         #next-mint-countdown {
             font-size: 1.125rem;
@@ -39,11 +33,7 @@
 <body class="p-4 md:p-8 flex flex-col items-center justify-center">
 
     <div class="max-w-xl w-full">
-        <!-- Configuration Warning for GitHub Viewers -->
-        <div id="config-alert" class="config-warning mb-6 hidden">
-            <p class="text-sm font-semibold text-red-300">🚨 CONFIGURATION REQUIRED 🚨</p>
-            <p class="text-xs text-red-200 mt-1">This file requires manual Firebase keys (inside the script block) to run locally. Anonymous auth is active.</p>
-        </div>
+        <!-- Configuration Warning REMOVED for clean demo -->
         
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-[#79e0ee] tracking-tight">$DEPTH$ Protocol V1</h1>
@@ -120,6 +110,7 @@
 
         // ====================================================================================
         // --- CONFIGURATION BLOCK FOR GITHUB / LOCAL HOSTING ---
+        // These keys are only used if the app is run outside of the Canvas environment.
         const firebaseConfig = {
             apiKey: "AIzaSyBJbfi_BaUYd6nPlBHDdjbBm_RnPMIc4jM",
             authDomain: "depth-protocol.firebaseapp.com",
@@ -149,19 +140,19 @@
         const STREAK_BAR = document.getElementById('streak-bar');
         const HISTORY_CONTAINER = document.getElementById('history-container');
         const SUBMIT_BUTTON = document.getElementById('submit-button');
-        const CONFIG_ALERT = document.getElementById('config-alert');
 
         // --- Determine Configuration Source (Canvas vs. Local/GitHub) ---
         let finalFirebaseConfig;
         let finalAppId;
 
+        // Use Canvas globals if available, otherwise use hardcoded local config
         if (typeof __firebase_config !== 'undefined') {
             finalFirebaseConfig = JSON.parse(__firebase_config);
             finalAppId = typeof __app_id !== 'undefined' ? __app_id : LOCAL_APP_ID;
         } else {
             finalFirebaseConfig = firebaseConfig; 
             finalAppId = LOCAL_APP_ID;
-            CONFIG_ALERT.classList.remove('hidden'); 
+            // Removed CONFIG_ALERT visual warning here
         }
         
         // --- Authentication Logic ---
@@ -187,7 +178,8 @@
         }
 
         async function initializeAppAndAuth() {
-            if (!finalFirebaseConfig || !finalFirebaseConfig.apiKey || finalFirebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
+            // Basic check for local configuration integrity (if running locally)
+            if (finalAppId === LOCAL_APP_ID && (!finalFirebaseConfig || !finalFirebaseConfig.apiKey || finalFirebaseConfig.apiKey === "YOUR_API_KEY_HERE")) {
                 AUTH_STATUS.textContent = 'Configuration Error: Keys Missing';
                 AUTH_STATUS.classList.remove('bg-yellow-800', 'text-yellow-300');
                 AUTH_STATUS.classList.add('bg-red-800', 'text-red-300');
@@ -345,6 +337,7 @@
                     if (lastStreakDate.getTime() !== currentEntryDate.getTime()) {
                         break;
                     }
+                    // Handle double claim attempt on same day (shouldn't happen with 24hr lock but for safety)
                 }
             }
 
@@ -562,3 +555,4 @@
     </script>
 </body>
 </html>
+
