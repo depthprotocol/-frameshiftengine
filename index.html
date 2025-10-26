@@ -25,79 +25,348 @@
         #next-mint-countdown {
             font-size: 1.125rem;
             font-weight: 700;
-            color: #ffcc00; /* Amber/Yellow for attention */
+            color: #ffcc00;
             text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        .growth-bar {
+            transition: height 0.8s ease-in-out;
+        }
+        .score-breakdown {
+            background: linear-gradient(135deg, #1e3a8a20, #065f4620);
+            border-left: 4px solid #79e0ee;
+        }
+        /* Enhanced mobile experience */
+        @media (max-width: 768px) {
+            .mobile-optimized {
+                padding: 1rem;
+            }
+            .mobile-sticky-header {
+                position: sticky;
+                top: 0;
+                background: #0d1117;
+                z-index: 40;
+                padding: 1rem 0;
+                border-bottom: 1px solid #30363d;
+            }
+        }
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Better touch targets */
+        button, textarea, input {
+            min-height: 44px;
+        }
+        /* Celebration animations */
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: confettiFall 2s linear forwards;
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(121, 224, 238, 0.5); }
         }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col items-center justify-center">
+<body class="p-4 md:p-8 flex flex-col items-center justify-center mobile-optimized">
 
     <div class="max-w-xl w-full">
-        <!-- Configuration Warning REMOVED for clean demo -->
-        
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 mobile-sticky-header">
             <h1 class="text-4xl font-extrabold text-[#79e0ee] tracking-tight">$DEPTH$ Protocol V1</h1>
             <p class="text-sm text-gray-400 mt-1">The Frame Shift Engine: Proof of Growth (PoG)</p>
             <div id="auth-status" class="mt-4 text-xs font-medium px-3 py-1 rounded-full w-fit mx-auto shadow-inner bg-yellow-800 text-yellow-300">Authenticating...</div>
         </header>
 
-        <!-- Metrics Dashboard -->
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <div id="depth-tally" class="card p-4 rounded-xl shadow-lg text-center">
-                <p class="text-xs text-gray-400 uppercase tracking-wider">Total D-PNT Minted</p>
-                <p class="text-3xl font-bold mt-1 text-[#4d7d9a]"><span id="d-pnt-count">0</span> D-PNT</p>
+        <!-- Onboarding Tour -->
+        <div id="onboarding-tour" class="card p-6 rounded-xl shadow-2xl mb-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-[#79e0ee] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🌱</span>
+                </div>
+                <h3 class="text-xl font-bold text-[#79e0ee] mb-2">Welcome to Your Growth Journey</h3>
+                <p class="text-gray-300 mb-4">Track your mental shifts, build resilience, and earn rewards for conscious choices.</p>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-lg">1</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Log Triggers</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-lg">2</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Reframe Thoughts</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-lg">3</span>
+                        </div>
+                        <p class="text-xs text-gray-400">Earn Growth</p>
+                    </div>
+                </div>
+                <button onclick="startApp()" class="bg-[#79e0ee] text-black px-6 py-2 rounded-lg font-semibold hover:bg-[#60b3c4] transition">
+                    Start Growing
+                </button>
             </div>
-            <div id="streak-tracker" class="card p-4 rounded-xl shadow-lg text-center">
-                <p class="text-xs text-gray-400 uppercase tracking-wider">Current Bloom Streak</p>
-                <div class="flex flex-col items-center justify-center h-full -mt-2">
-                    <p class="text-3xl font-bold text-[#79e0ee]"><span id="streak-count">0</span></p>
-                    <p class="text-sm text-gray-400">/ 7 Days</p>
-                    <div id="streak-progress" class="w-full h-2 rounded-full mt-2 bg-gray-700">
-                        <div id="streak-bar" class="h-2 rounded-full bg-green-500 transition-all duration-500" style="width: 0%;"></div>
+        </div>
+
+        <!-- Metrics Dashboard -->
+        <div id="main-content" class="hidden">
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div id="depth-tally" class="card p-4 rounded-xl shadow-lg text-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider">Total D-PNT Minted</p>
+                    <p class="text-3xl font-bold mt-1 text-[#4d7d9a]"><span id="d-pnt-count">0</span> D-PNT</p>
+                </div>
+                <div id="streak-tracker" class="card p-4 rounded-xl shadow-lg text-center">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider">Current Bloom Streak</p>
+                    <div class="flex flex-col items-center justify-center h-full -mt-2">
+                        <p class="text-3xl font-bold text-[#79e0ee]"><span id="streak-count">0</span></p>
+                        <p class="text-sm text-gray-400">/ 7 Days</p>
+                        <div id="streak-progress" class="w-full h-2 rounded-full mt-2 bg-gray-700">
+                            <div id="streak-bar" class="h-2 rounded-full bg-green-500 transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Growth Milestones -->
+            <div class="card p-4 mb-6">
+                <h4 class="text-sm font-semibold text-[#79e0ee] mb-3">Growth Milestones</h4>
+                <div class="flex justify-between text-xs text-gray-400 mb-2">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
+                    <span>Master</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div id="mastery-bar" class="h-2 rounded-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Growth Analytics Dashboard -->
+            <div id="growth-analytics" class="card p-6 rounded-xl shadow-2xl mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-4 text-[#79e0ee]">Growth Analytics</h2>
+                <p class="text-sm text-gray-400 mb-4">Visualize your emotional shifts and progress over time</p>
+                
+                <!-- Growth Score Display -->
+                <div class="mb-6 p-4 rounded-lg score-breakdown">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-lg font-bold text-gray-300">Growth Score</p>
+                        <p class="text-2xl font-bold text-[#79e0ee]" id="growth-score-display">0.0</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="text-center">
+                            <p class="text-green-400 font-semibold" id="reflection-score">0.0</p>
+                            <p class="text-gray-400">Reflection</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-blue-400 font-semibold" id="emotional-score">0.0</p>
+                            <p class="text-gray-400">Emotional</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-purple-400 font-semibold" id="cognitive-score">0.0</p>
+                            <p class="text-gray-400">Cognitive</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-sm font-medium text-gray-300">Emotional Shift Score</p>
+                        <p class="text-sm text-[#79e0ee]" id="emotional-shift-score">+0</p>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div id="emotional-shift-bar" class="h-3 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-sm font-medium text-gray-300 mb-2">Growth Timeline</p>
+                    <div id="growth-chart" class="h-32 flex items-end justify-between gap-1 px-2">
+                        <div class="text-center text-xs text-gray-400 w-full">
+                            <p>No data yet</p>
+                            <p class="mt-8">Start logging frame shifts to see your growth!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="ai-insights" class="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-700/30">
+                    <p class="text-xs text-blue-300 font-semibold mb-1">🤖 AI Insight</p>
+                    <p id="insight-text" class="text-sm text-blue-200">Complete your first frame shift to get personalized insights</p>
+                </div>
+
+                <!-- Smart Suggestions -->
+                <div id="smart-suggestions" class="mt-4 p-3 bg-purple-900/20 rounded-lg border border-purple-700/30 hidden">
+                    <p class="text-xs text-purple-300 font-semibold mb-1">💡 Growth Tip</p>
+                    <p id="suggestion-text" class="text-sm text-purple-200"></p>
+                </div>
+            </div>
+
+            <!-- Frame Shift Input Form -->
+            <div class="card p-6 rounded-xl shadow-2xl">
+                <h2 class="text-xl font-semibold mb-4 text-[#79e0ee]">Log a Frame Shift (Daily Reward)</h2>
+                <p class="text-sm text-gray-400 mb-4">Mint your D-PNT by recording a conscious choice.</p>
+                
+                <form id="frame-shift-form">
+                    <div class="mb-4">
+                        <label for="trigger" class="block text-sm font-medium text-gray-300 mb-1">1. The Trigger (The Event)</label>
+                        <textarea id="trigger" rows="2" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none character-count" placeholder="What happened? What was the external or internal event?" required maxlength="500"></textarea>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 hidden" id="trigger-count">0/500</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="old-frame" class="block text-sm font-medium text-gray-300 mb-1">2. The Old Frame (The Reactive Thought)</label>
+                        <textarea id="old-frame" rows="2" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none character-count" placeholder="What was your initial, reactive, or negative thought/feeling?" required maxlength="500"></textarea>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 hidden" id="old-frame-count">0/500</span>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label for="new-frame" class="block text-sm font-medium text-gray-300 mb-1">3. The New Frame (The Conscious Choice)</label>
+                        <textarea id="new-frame" rows="3" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none character-count" placeholder="What is the conscious, productive frame you chose instead?" required maxlength="500"></textarea>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 hidden" id="new-frame-count">0/500</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="submit-button" class="w-full py-3 px-4 bg-[#79e0ee] text-black font-bold rounded-xl shadow-lg hover:bg-[#60b3c4] transition duration-200 flex items-center justify-center">
+                        Mint D-PNT and Log Frame Shift
+                    </button>
+                </form>
+                <div id="message-container" class="mt-4 text-center text-sm">
+                    <p id="message-box"></p>
+                    <div id="countdown-display" class="pt-2 hidden">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Next D-PNT Mint Available In:</p>
+                        <span id="next-mint-countdown">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Insights -->
+            <div id="community-insights" class="card p-6 rounded-xl shadow-2xl mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-[#79e0ee]">Community Growth</h2>
+                <p class="text-sm text-gray-400 mb-4">Real-time insights from fellow growth seekers</p>
+                
+                <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                    <div class="card p-3 rounded-lg">
+                        <p class="text-2xl font-bold text-[#79e0ee]" id="total-community-shifts">0</p>
+                        <p class="text-xs text-gray-400">Total Frame Shifts</p>
+                    </div>
+                    <div class="card p-3 rounded-lg">
+                        <p class="text-2xl font-bold text-green-400" id="total-community-depth">0</p>
+                        <p class="text-xs text-gray-400">Total D-PNT Minted</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                    <div class="card p-3 rounded-lg">
+                        <p class="text-xl font-bold text-blue-400" id="active-users">1</p>
+                        <p class="text-xs text-gray-400">Active Users</p>
+                    </div>
+                    <div class="card p-3 rounded-lg">
+                        <p class="text-xl font-bold text-purple-400" id="common-challenges">5</p>
+                        <p class="text-xs text-gray-400">Common Challenges</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-300 mb-2">Most Common Growth Areas</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs bg-green-900/30 text-green-300 px-2 py-1 rounded-full">Resilience</span>
+                        <span class="text-xs bg-blue-900/30 text-blue-300 px-2 py-1 rounded-full">Self-awareness</span>
+                        <span class="text-xs bg-purple-900/30 text-purple-300 px-2 py-1 rounded-full">Emotional regulation</span>
+                    </div>
+                </div>
+
+                <!-- Real-time activity feed -->
+                <div id="community-activity" class="mt-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700/30 hidden">
+                    <p class="text-xs text-gray-300 font-semibold mb-2">🔄 Live Activity</p>
+                    <div id="activity-feed" class="space-y-1 max-h-32 overflow-y-auto">
+                        <!-- Activity items will appear here -->
+                    </div>
+                </div>
+
+                <!-- Debug section (hidden by default) -->
+                <div class="mt-4 p-3 bg-yellow-900/20 rounded-lg border border-yellow-700/30">
+                    <p class="text-xs text-yellow-300 font-semibold mb-2">🐛 Debug Tools</p>
+                    <div class="flex gap-2">
+                        <button onclick="debugCommunity()" class="text-xs bg-yellow-700 hover:bg-yellow-600 text-white px-3 py-1 rounded transition">
+                            Test Community
+                        </button>
+                        <button onclick="forceRefreshCommunity()" class="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded transition">
+                            Refresh Stats
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Private History View -->
+            <div class="mt-10">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                    <h2 class="text-xl font-semibold text-[#79e0ee]">Your Private History (Persistence)</h2>
+                    <button id="export-data" class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-lg transition hidden">
+                        Export Data
+                    </button>
+                </div>
+                <p class="text-sm text-gray-400 mb-4">This ledger is for your eyes only. Use it to visibly measure your growth.</p>
+                <div id="history-container" class="space-y-4">
+                    <p id="history-loading" class="text-gray-500 text-center">Loading past Frame Shifts...</p>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="card p-6 rounded-xl shadow-2xl mt-8">
+                <h3 class="text-xl font-semibold text-[#79e0ee] mb-4">Personalize Your Experience</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" id="celebrations" class="rounded bg-gray-700 border-gray-600" checked>
+                            <span class="text-gray-300">Achievement celebrations</span>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="text-gray-300 block mb-2">Growth Focus Areas</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="rounded bg-gray-700 border-gray-600" checked>
+                                <span class="text-sm text-gray-400">Work & Career</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="rounded bg-gray-700 border-gray-600" checked>
+                                <span class="text-sm text-gray-400">Relationships</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" class="rounded bg-gray-700 border-gray-600" checked>
+                                <span class="text-sm text-gray-400">Personal Growth</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Frame Shift Input Form -->
-        <div class="card p-6 rounded-xl shadow-2xl">
-            <h2 class="text-xl font-semibold mb-4 text-[#79e0ee]">Log a Frame Shift (Daily Reward)</h2>
-            <p class="text-sm text-gray-400 mb-4">Mint your D-PNT by recording a conscious choice.</p>
-            
-            <form id="frame-shift-form">
-                <div class="mb-4">
-                    <label for="trigger" class="block text-sm font-medium text-gray-300 mb-1">1. The Trigger (The Event)</label>
-                    <textarea id="trigger" rows="2" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none" placeholder="What happened? What was the external or internal event?" required></textarea>
+        <!-- Achievement Notification -->
+        <div id="achievement-toast" class="fixed top-4 right-4 card p-4 rounded-lg shadow-2xl border-l-4 border-yellow-500 transform translate-x-full transition-transform duration-300 z-50 max-w-sm hidden">
+            <div class="flex items-center space-x-3">
+                <div class="text-2xl">🏆</div>
+                <div>
+                    <p class="font-semibold text-yellow-400" id="achievement-title">Achievement Unlocked!</p>
+                    <p class="text-sm text-gray-300" id="achievement-desc">You've reached a new milestone</p>
                 </div>
-                <div class="mb-4">
-                    <label for="old-frame" class="block text-sm font-medium text-gray-300 mb-1">2. The Old Frame (The Reactive Thought)</label>
-                    <textarea id="old-frame" rows="2" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none" placeholder="What was your initial, reactive, or negative thought/feeling?" required></textarea>
-                </div>
-                <div class="mb-6">
-                    <label for="new-frame" class="block text-sm font-medium text-gray-300 mb-1">3. The New Frame (The Conscious Choice)</label>
-                    <textarea id="new-frame" rows="3" class="w-full card p-3 rounded-lg border-none focus:ring-2 focus:ring-[#79e0ee] focus:border-transparent text-sm resize-none" placeholder="What is the conscious, productive frame you chose instead?" required></textarea>
-                </div>
-                
-                <button type="submit" id="submit-button" class="w-full py-3 px-4 bg-[#79e0ee] text-black font-bold rounded-xl shadow-lg hover:bg-[#60b3c4] transition duration-200">
-                    Mint D-PNT and Log Frame Shift
-                </button>
-            </form>
-            <div id="message-container" class="mt-4 text-center text-sm">
-                <p id="message-box"></p>
-                <div id="countdown-display" class="pt-2 hidden">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Next D-PNT Mint Available In:</p>
-                    <span id="next-mint-countdown">--:--:--</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Private History View -->
-        <div class="mt-10">
-            <h2 class="text-xl font-semibold mb-4 text-[#79e0ee] border-b border-gray-700 pb-2">Your Private History (Persistence)</h2>
-            <p class="text-sm text-gray-400 mb-4">This ledger is for your eyes only. Use it to visibly measure your growth.</p>
-            <div id="history-container" class="space-y-4">
-                <p id="history-loading" class="text-gray-500 text-center">Loading past Frame Shifts...</p>
-                <!-- History items will be inserted here -->
             </div>
         </div>
     </div>
@@ -106,11 +375,25 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel, doc, setDoc, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getFirestore, 
+            setLogLevel, 
+            doc, 
+            setDoc, 
+            getDoc,
+            updateDoc,
+            collection, 
+            query, 
+            onSnapshot, 
+            getDocs, 
+            increment, 
+            serverTimestamp,
+            orderBy,
+            limit
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ====================================================================================
         // --- CONFIGURATION BLOCK FOR GITHUB / LOCAL HOSTING ---
-        // These keys are only used if the app is run outside of the Canvas environment.
         const firebaseConfig = {
             apiKey: "AIzaSyBJbfi_BaUYd6nPlBHDdjbBm_RnPMIc4jM",
             authDomain: "depth-protocol.firebaseapp.com",
@@ -130,6 +413,7 @@
         let isAuthReady = false;
         let unsubscribeHistory = null;
         let countdownInterval = null; 
+        let unsubscribeCommunity = null;
 
         const AUTH_STATUS = document.getElementById('auth-status');
         const MESSAGE_BOX = document.getElementById('message-box');
@@ -140,19 +424,500 @@
         const STREAK_BAR = document.getElementById('streak-bar');
         const HISTORY_CONTAINER = document.getElementById('history-container');
         const SUBMIT_BUTTON = document.getElementById('submit-button');
+        const GROWTH_ANALYTICS = document.getElementById('growth-analytics');
+        const COMMUNITY_INSIGHTS = document.getElementById('community-insights');
+        const ONBOARDING_TOUR = document.getElementById('onboarding-tour');
+        const MAIN_CONTENT = document.getElementById('main-content');
+        const ACHIEVEMENT_TOAST = document.getElementById('achievement-toast');
+        const MASTERY_BAR = document.getElementById('mastery-bar');
+        const EXPORT_BUTTON = document.getElementById('export-data');
+
+        // --- Community Elements ---
+        const TOTAL_COMMUNITY_SHIFTS = document.getElementById('total-community-shifts');
+        const TOTAL_COMMUNITY_DEPTH = document.getElementById('total-community-depth');
+        const ACTIVE_USERS = document.getElementById('active-users');
+        const COMMUNITY_ACTIVITY = document.getElementById('community-activity');
+        const ACTIVITY_FEED = document.getElementById('activity-feed');
+
+        // --- UX Enhancements ---
+        
+        // Achievement system
+        const achievements = {
+            firstShift: { name: "First Step", desc: "Log your first frame shift", earned: false, icon: "🌱" },
+            threeDayStreak: { name: "Building Momentum", desc: "3-day streak", earned: false, icon: "🔥" },
+            weekStreak: { name: "Consistency Champion", desc: "7-day streak", earned: false, icon: "🏆" },
+            deepInsight: { name: "Deep Thinker", desc: "Score 8+ on growth", earned: false, icon: "💡" },
+            tenShifts: { name: "Dedicated Grower", desc: "10 total frame shifts", earned: false, icon: "⭐" }
+        };
+
+        // Start app function
+        window.startApp = function() {
+            ONBOARDING_TOUR.classList.add('hidden');
+            MAIN_CONTENT.classList.remove('hidden');
+            enhanceTextareas();
+        };
+
+        // Enhanced textareas with character counting and auto-expand
+        function enhanceTextareas() {
+            const textareas = document.querySelectorAll('.character-count');
+            textareas.forEach(textarea => {
+                const countId = textarea.id + '-count';
+                const countElement = document.getElementById(countId);
+                
+                // Auto-expand
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                    
+                    // Character count
+                    const count = this.value.length;
+                    if (countElement) {
+                        countElement.textContent = `${count}/500`;
+                        countElement.classList.toggle('hidden', count === 0);
+                        
+                        if (count > 400) {
+                            countElement.className = 'text-xs text-yellow-500';
+                        } else if (count > 300) {
+                            countElement.className = 'text-xs text-gray-400';
+                        } else {
+                            countElement.className = 'text-xs text-gray-500';
+                        }
+                    }
+                });
+            });
+        }
+
+        // Loading state for submission
+        function showLoadingState() {
+            SUBMIT_BUTTON.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                </div>
+            `;
+            SUBMIT_BUTTON.disabled = true;
+        }
+
+        // Success animation
+        function showSuccessAnimation() {
+            SUBMIT_BUTTON.innerHTML = '✓ Success!';
+            SUBMIT_BUTTON.classList.remove('bg-[#79e0ee]', 'hover:bg-[#60b3c4]');
+            SUBMIT_BUTTON.classList.add('bg-green-500', 'hover:bg-green-600');
+            
+            setTimeout(() => {
+                SUBMIT_BUTTON.innerHTML = 'Mint D-PNT and Log Frame Shift';
+                SUBMIT_BUTTON.classList.remove('bg-green-500', 'hover:bg-green-600');
+                SUBMIT_BUTTON.classList.add('bg-[#79e0ee]', 'hover:bg-[#60b3c4]');
+                SUBMIT_BUTTON.disabled = false;
+            }, 2000);
+        }
+
+        // Celebration animation
+        function createConfetti() {
+            if (!document.getElementById('celebrations').checked) return;
+            
+            const colors = ['#79e0ee', '#ff6b6b', '#4ecdc4', '#ffe66d', '#ff9ff3'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        // Achievement notification
+        function showAchievement(achievement) {
+            if (!document.getElementById('celebrations').checked) return;
+            
+            document.getElementById('achievement-title').textContent = achievement.name;
+            document.getElementById('achievement-desc').textContent = achievement.desc;
+            ACHIEVEMENT_TOAST.querySelector('.text-2xl').textContent = achievement.icon;
+            
+            ACHIEVEMENT_TOAST.classList.remove('hidden');
+            ACHIEVEMENT_TOAST.classList.remove('translate-x-full');
+            
+            createConfetti();
+            
+            setTimeout(() => {
+                ACHIEVEMENT_TOAST.classList.add('translate-x-full');
+                setTimeout(() => ACHIEVEMENT_TOAST.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // Check achievements
+        function checkAchievements(history, currentStreak, latestScore) {
+            const newAchievements = [];
+            
+            if (history.length === 1 && !achievements.firstShift.earned) {
+                achievements.firstShift.earned = true;
+                newAchievements.push(achievements.firstShift);
+            }
+            
+            if (currentStreak >= 3 && !achievements.threeDayStreak.earned) {
+                achievements.threeDayStreak.earned = true;
+                newAchievements.push(achievements.threeDayStreak);
+            }
+            
+            if (currentStreak >= 7 && !achievements.weekStreak.earned) {
+                achievements.weekStreak.earned = true;
+                newAchievements.push(achievements.weekStreak);
+            }
+            
+            if (latestScore >= 8 && !achievements.deepInsight.earned) {
+                achievements.deepInsight.earned = true;
+                newAchievements.push(achievements.deepInsight);
+            }
+            
+            if (history.length >= 10 && !achievements.tenShifts.earned) {
+                achievements.tenShifts.earned = true;
+                newAchievements.push(achievements.tenShifts);
+            }
+            
+            newAchievements.forEach(achievement => showAchievement(achievement));
+            return newAchievements;
+        }
+
+        // Smart suggestions
+        function provideSmartSuggestions(history) {
+            const suggestionsElement = document.getElementById('smart-suggestions');
+            const suggestionText = document.getElementById('suggestion-text');
+            
+            if (history.length === 0) {
+                suggestionsElement.classList.add('hidden');
+                return;
+            }
+            
+            const latest = history[0];
+            let suggestion = null;
+            
+            if (latest.analysis?.growthScore < 5) {
+                suggestion = "💡 Tip: Try to be more specific in your new frame. What concrete action can you take?";
+            } else if (latest.analysis?.emotionalShift < 2) {
+                suggestion = "💡 Tip: Focus on finding the opportunity in challenges. What can this teach you?";
+            } else if (history.length < 3) {
+                suggestion = "💡 Great start! Consistency is key - try to log shifts daily.";
+            } else {
+                suggestion = "💡 Strong progress! Consider reviewing past shifts to see your growth patterns.";
+            }
+            
+            if (suggestion) {
+                suggestionText.textContent = suggestion;
+                suggestionsElement.classList.remove('hidden');
+            } else {
+                suggestionsElement.classList.add('hidden');
+            }
+        }
+
+        // Update mastery progress
+        function updateMasteryProgress(history, currentStreak) {
+            let progress = 0;
+            
+            // Base progress on number of entries
+            progress += Math.min(40, (history.length / 20) * 40);
+            
+            // Bonus for streaks
+            progress += Math.min(30, (currentStreak / 7) * 30);
+            
+            // Bonus for high-quality entries
+            const highQualityEntries = history.filter(entry => entry.analysis?.growthScore >= 7).length;
+            progress += Math.min(30, (highQualityEntries / 10) * 30);
+            
+            MASTERY_BAR.style.width = `${Math.min(100, progress)}%`;
+        }
+
+        // Data export
+        EXPORT_BUTTON.addEventListener('click', () => {
+            alert('Export functionality would save your growth data as a JSON file for personal reflection.');
+        });
+
+        // --- COMMUNITY FUNCTIONS ---
+
+        // Initialize community stats if they don't exist
+        async function initializeCommunityStats() {
+            if (!isAuthReady || !db) return;
+            
+            try {
+                const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+                const communityDoc = await getDoc(communityRef);
+                
+                if (!communityDoc.exists()) {
+                    console.log("Creating initial community stats document...");
+                    // Create initial community stats
+                    await setDoc(communityRef, {
+                        totalDepthMinted: 0,
+                        totalShifts: 0,
+                        activeUsers: 1,
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log("Community stats initialized successfully");
+                } else {
+                    console.log("Community stats already exist:", communityDoc.data());
+                }
+            } catch (error) {
+                console.error("Error initializing community stats:", error);
+            }
+        }
+
+        // Update community stats when user mints D-PNT
+        async function updateCommunityStats(depthAmount, shiftCount = 1) {
+            if (!isAuthReady || !userId || !db) return;
+            
+            try {
+                const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+                
+                console.log(`Updating community stats: +${depthAmount} D-PNT, +${shiftCount} shifts`);
+                
+                // First try to get current stats to ensure document exists
+                const currentDoc = await getDoc(communityRef);
+                if (!currentDoc.exists()) {
+                    console.log("Community stats doc doesn't exist, creating it first...");
+                    await initializeCommunityStats();
+                }
+                
+                // Use updateDoc with increment to ensure atomic updates
+                await updateDoc(communityRef, {
+                    totalDepthMinted: increment(depthAmount),
+                    totalShifts: increment(shiftCount),
+                    lastUpdated: serverTimestamp()
+                });
+                
+                console.log(`Community stats updated successfully`);
+                
+                // Add to activity feed
+                await addCommunityActivity(depthAmount);
+                
+            } catch (error) {
+                console.error("Error updating community stats:", error);
+                // If update fails, try the fallback method
+                try {
+                    console.log("Trying fallback update method...");
+                    const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+                    const currentDoc = await getDoc(communityRef);
+                    const currentData = currentDoc.exists() ? currentDoc.data() : { totalDepthMinted: 0, totalShifts: 0 };
+                    
+                    const newTotalDepth = (currentData.totalDepthMinted || 0) + depthAmount;
+                    const newTotalShifts = (currentData.totalShifts || 0) + shiftCount;
+                    
+                    await setDoc(communityRef, {
+                        totalDepthMinted: newTotalDepth,
+                        totalShifts: newTotalShifts,
+                        lastUpdated: serverTimestamp()
+                    }, { merge: true });
+                    
+                    console.log("Community stats updated via fallback method:", { newTotalDepth, newTotalShifts });
+                } catch (fallbackError) {
+                    console.error("Fallback update also failed:", fallbackError);
+                }
+            }
+        }
+
+        // Add activity to community feed
+        async function addCommunityActivity(depthAmount) {
+            if (!isAuthReady || !userId || !db) return;
+            
+            try {
+                const activityRef = doc(collection(db, `artifacts/${finalAppId}/community/activity`));
+                await setDoc(activityRef, {
+                    type: 'mint',
+                    depthAmount: depthAmount,
+                    timestamp: serverTimestamp(),
+                    userId: userId.substring(0, 8) + '...' // Anonymized
+                });
+            } catch (error) {
+                console.error("Error adding community activity:", error);
+            }
+        }
+
+        // Setup real-time community listener with better error handling
+        function setupCommunityListener() {
+            if (!isAuthReady || !db) return;
+            
+            const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+            
+            console.log("Setting up community listener...");
+            
+            unsubscribeCommunity = onSnapshot(communityRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    const totalShifts = data.totalShifts || 0;
+                    const totalDepth = data.totalDepthMinted || 0;
+                    const activeUsers = data.activeUsers || 1;
+                    
+                    console.log("Community stats updated in real-time:", { totalShifts, totalDepth, activeUsers });
+                    
+                    // Update UI with animation
+                    animateCounter(TOTAL_COMMUNITY_SHIFTS, totalShifts);
+                    animateCounter(TOTAL_COMMUNITY_DEPTH, totalDepth);
+                    animateCounter(ACTIVE_USERS, activeUsers);
+                    
+                    // Show community section
+                    COMMUNITY_INSIGHTS.classList.remove('hidden');
+                    
+                } else {
+                    console.log("Community stats document doesn't exist in listener");
+                    // Initialize with zeros
+                    animateCounter(TOTAL_COMMUNITY_SHIFTS, 0);
+                    animateCounter(TOTAL_COMMUNITY_DEPTH, 0);
+                    animateCounter(ACTIVE_USERS, 1);
+                    COMMUNITY_INSIGHTS.classList.remove('hidden');
+                }
+            }, (error) => {
+                console.error("Community listener error:", error);
+                // Show fallback values but still show the section
+                animateCounter(TOTAL_COMMUNITY_SHIFTS, 0);
+                animateCounter(TOTAL_COMMUNITY_DEPTH, 0);
+                animateCounter(ACTIVE_USERS, 1);
+                COMMUNITY_INSIGHTS.classList.remove('hidden');
+            });
+
+            // Setup activity feed listener
+            setupActivityFeed();
+        }
+
+        // Animate counter values
+        function animateCounter(element, targetValue) {
+            const currentValue = parseInt(element.textContent.replace(/,/g, '')) || 0;
+            if (currentValue === targetValue) return;
+            
+            element.classList.add('pulse-glow');
+            setTimeout(() => {
+                element.classList.remove('pulse-glow');
+            }, 2000);
+            
+            element.textContent = targetValue.toLocaleString();
+        }
+
+        // Setup real-time activity feed
+        function setupActivityFeed() {
+            if (!isAuthReady || !db) return;
+            
+            const activityRef = collection(db, `artifacts/${finalAppId}/community/activity`);
+            const activityQuery = query(activityRef, orderBy('timestamp', 'desc'), limit(5));
+            
+            onSnapshot(activityQuery, (snapshot) => {
+                const activities = [];
+                snapshot.forEach(doc => {
+                    activities.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateActivityFeed(activities);
+            }, (error) => {
+                console.error("Activity feed error:", error);
+            });
+        }
+
+        // Update activity feed UI
+        function updateActivityFeed(activities) {
+            if (activities.length === 0) {
+                COMMUNITY_ACTIVITY.classList.add('hidden');
+                return;
+            }
+            
+            COMMUNITY_ACTIVITY.classList.remove('hidden');
+            ACTIVITY_FEED.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const activityElement = document.createElement('div');
+                activityElement.className = 'text-xs text-gray-400 flex justify-between items-center py-1';
+                
+                let message = '';
+                if (activity.type === 'mint') {
+                    message = `🌱 User ${activity.userId || 'Anonymous'} minted ${activity.depthAmount || 1} D-PNT`;
+                } else {
+                    message = `📝 User ${activity.userId || 'Anonymous'} logged a frame shift`;
+                }
+                
+                const time = activity.timestamp?.toDate?.() 
+                    ? formatRelativeTime(activity.timestamp.toDate())
+                    : 'just now';
+                
+                activityElement.innerHTML = `
+                    <span class="flex-1 truncate mr-2">${message}</span>
+                    <span class="text-gray-500 text-xs flex-shrink-0">${time}</span>
+                `;
+                
+                ACTIVITY_FEED.appendChild(activityElement);
+            });
+        }
+
+        // Format relative time (e.g., "2 minutes ago")
+        function formatRelativeTime(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        // --- DEBUG FUNCTIONS ---
+        
+        // Temporary debug function - call this in browser console to test
+        window.debugCommunity = async function() {
+            console.log("=== COMMUNITY DEBUG ===");
+            console.log("Testing community connection...");
+            const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+            
+            try {
+                const docSnap = await getDoc(communityRef);
+                if (docSnap.exists()) {
+                    console.log("✅ Community stats found:", docSnap.data());
+                    // Update UI with current values
+                    const data = docSnap.data();
+                    animateCounter(TOTAL_COMMUNITY_SHIFTS, data.totalShifts || 0);
+                    animateCounter(TOTAL_COMMUNITY_DEPTH, data.totalDepthMinted || 0);
+                    animateCounter(ACTIVE_USERS, data.activeUsers || 1);
+                } else {
+                    console.log("❌ No community stats found - creating...");
+                    await initializeCommunityStats();
+                }
+                
+                // Test increment
+                console.log("Testing community update...");
+                await updateCommunityStats(1, 1);
+                console.log("✅ Test update completed");
+                
+            } catch (error) {
+                console.error("❌ Debug test failed:", error);
+            }
+        };
+
+        // Force refresh community stats
+        window.forceRefreshCommunity = async function() {
+            console.log("Force refreshing community stats...");
+            const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+            
+            try {
+                const docSnap = await getDoc(communityRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("Current community stats:", data);
+                    animateCounter(TOTAL_COMMUNITY_SHIFTS, data.totalShifts || 0);
+                    animateCounter(TOTAL_COMMUNITY_DEPTH, data.totalDepthMinted || 0);
+                    animateCounter(ACTIVE_USERS, data.activeUsers || 1);
+                }
+            } catch (error) {
+                console.error("Error refreshing community:", error);
+            }
+        };
 
         // --- Determine Configuration Source (Canvas vs. Local/GitHub) ---
         let finalFirebaseConfig;
         let finalAppId;
 
-        // Use Canvas globals if available, otherwise use hardcoded local config
         if (typeof __firebase_config !== 'undefined') {
             finalFirebaseConfig = JSON.parse(__firebase_config);
             finalAppId = typeof __app_id !== 'undefined' ? __app_id : LOCAL_APP_ID;
         } else {
             finalFirebaseConfig = firebaseConfig; 
             finalAppId = LOCAL_APP_ID;
-            // Removed CONFIG_ALERT visual warning here
         }
         
         // --- Authentication Logic ---
@@ -178,7 +943,6 @@
         }
 
         async function initializeAppAndAuth() {
-            // Basic check for local configuration integrity (if running locally)
             if (finalAppId === LOCAL_APP_ID && (!finalFirebaseConfig || !finalFirebaseConfig.apiKey || finalFirebaseConfig.apiKey === "YOUR_API_KEY_HERE")) {
                 AUTH_STATUS.textContent = 'Configuration Error: Keys Missing';
                 AUTH_STATUS.classList.remove('bg-yellow-800', 'text-yellow-300');
@@ -198,18 +962,23 @@
                     AUTH_STATUS.classList.add('bg-green-800', 'text-green-300');
                     isAuthReady = true;
 
-                    // Unsubscribe previous listener and timer if they exist before setting up a new one
                     if (unsubscribeHistory) unsubscribeHistory();
                     if (countdownInterval) clearInterval(countdownInterval);
+                    if (unsubscribeCommunity) unsubscribeCommunity();
                     countdownInterval = null; 
                     
-                    // Start the real-time listener for user history
+                    // Initialize community stats first
+                    await initializeCommunityStats();
+                    
                     unsubscribeHistory = setupHistoryListener();
+                    setupCommunityListener();
+                    
                 } else {
                     isAuthReady = false; 
                     AUTH_STATUS.textContent = 'Unauthenticated';
                     if (unsubscribeHistory) unsubscribeHistory();
                     if (countdownInterval) clearInterval(countdownInterval);
+                    if (unsubscribeCommunity) unsubscribeCommunity();
                     countdownInterval = null;
                 }
             });
@@ -219,7 +988,194 @@
 
         initializeAppAndAuth();
         
-        // --- Utility Functions ---
+        // [All your existing analysis functions remain exactly the same...]
+        const analyzeFrameShift = async (trigger, oldFrame, newFrame) => {
+            try {
+                const emotionalShift = calculateEmotionalShift(oldFrame, newFrame);
+                const { totalScore, breakdown } = calculateEnhancedGrowthScore(trigger, oldFrame, newFrame, emotionalShift);
+                const keyThemes = extractKeyThemes([trigger, oldFrame, newFrame]);
+                
+                const analysis = {
+                    emotionalShift,
+                    growthScore: totalScore,
+                    growthBreakdown: breakdown,
+                    keyThemes,
+                    insight: generateEnhancedInsight(totalScore, emotionalShift, breakdown, keyThemes)
+                };
+                
+                return analysis;
+            } catch (error) {
+                console.error("Analysis error:", error);
+                return null;
+            }
+        };
+
+        const calculateEmotionalShift = (oldFrame, newFrame) => {
+            const negativeWords = ['cant', 'wont', 'bad', 'hate', 'angry', 'sad', 'fear', 'anxious', 'worried', 'stressed', 'failed', 'cant', 'wont', 'dont', 'never', 'hard', 'difficult', 'problem', 'issue', 'terrible', 'awful', 'horrible', 'stupid', 'useless', 'hopeless'];
+            const positiveWords = ['can', 'will', 'good', 'love', 'happy', 'excited', 'hope', 'calm', 'confident', 'proud', 'grateful', 'peace', 'solution', 'opportunity', 'growth', 'learn', 'improve', 'better', 'strong', 'capable', 'proud', 'thankful', 'optimistic', 'resilient'];
+            
+            let oldScore = 0, newScore = 0;
+            
+            const textToWords = (text) => text.toLowerCase().split(/\W+/);
+            const oldWords = textToWords(oldFrame);
+            const newWords = textToWords(newFrame);
+            
+            oldWords.forEach(word => {
+                if (negativeWords.includes(word)) oldScore -= word.length > 5 ? 2 : 1;
+                if (positiveWords.includes(word)) oldScore += word.length > 5 ? 2 : 1;
+            });
+            
+            newWords.forEach(word => {
+                if (negativeWords.includes(word)) newScore -= word.length > 5 ? 2 : 1;
+                if (positiveWords.includes(word)) newScore += word.length > 5 ? 2 : 1;
+            });
+            
+            const shift = Math.max(-10, Math.min(10, (newScore - oldScore)));
+            return shift;
+        };
+
+        const calculateEnhancedGrowthScore = (trigger, oldFrame, newFrame, emotionalShift) => {
+            const oldLength = oldFrame.split(' ').length;
+            const newLength = newFrame.split(' ').length;
+            const lengthRatio = Math.min(2, newLength / Math.max(1, oldLength));
+            const reflectionScore = Math.min(4, lengthRatio * 2);
+            
+            const emotionalImpact = Math.max(0, (emotionalShift + 10) / 20);
+            const emotionalScore = emotionalImpact * 3;
+            
+            const uniqueWordsNew = new Set(newFrame.toLowerCase().split(/\W+/)).size;
+            const cognitiveComplexity = Math.min(1, uniqueWordsNew / 15);
+            const cognitiveScore = cognitiveComplexity * 3;
+            
+            const actionWords = ['will', 'plan', 'action', 'do', 'implement', 'schedule', 'create', 'build', 'start', 'change'];
+            const hasAction = actionWords.some(word => newFrame.toLowerCase().includes(word));
+            const actionBonus = hasAction ? 0.5 : 0;
+            
+            const totalScore = Math.min(10, reflectionScore + emotionalScore + cognitiveScore + actionBonus);
+            
+            const breakdown = {
+                reflection: Math.round(reflectionScore * 10) / 10,
+                emotional: Math.round(emotionalScore * 10) / 10,
+                cognitive: Math.round(cognitiveScore * 10) / 10,
+                actionBonus: actionBonus
+            };
+            
+            return {
+                totalScore: Math.round(totalScore * 10) / 10,
+                breakdown
+            };
+        };
+
+        const extractKeyThemes = (texts) => {
+            const themes = {
+                'work': ['work', 'job', 'career', 'project', 'deadline', 'boss', 'colleague', 'meeting', 'promotion'],
+                'relationships': ['friend', 'partner', 'family', 'mother', 'father', 'sibling', 'relationship', 'love', 'dating'],
+                'self': ['I', 'me', 'my', 'myself', 'confidence', 'self-esteem', 'identity', 'worth', 'value'],
+                'health': ['health', 'exercise', 'diet', 'sleep', 'energy', 'body', 'mental', 'physical', 'fitness'],
+                'growth': ['learn', 'grow', 'improve', 'better', 'progress', 'develop', 'skill', 'ability'],
+                'finance': ['money', 'financial', 'budget', 'debt', 'income', 'savings', 'investment']
+            };
+            
+            const foundThemes = [];
+            const allText = texts.join(' ').toLowerCase();
+            
+            Object.entries(themes).forEach(([theme, keywords]) => {
+                const matches = keywords.filter(keyword => allText.includes(keyword)).length;
+                if (matches > 0) {
+                    foundThemes.push({ theme, strength: matches });
+                }
+            });
+            
+            return foundThemes.sort((a, b) => b.strength - a.strength).slice(0, 3).map(t => t.theme);
+        };
+
+        const generateEnhancedInsight = (growthScore, emotionalShift, breakdown, keyThemes) => {
+            const insights = {
+                exceptional: [
+                    "Exceptional growth! Your reflective depth and emotional intelligence are outstanding.",
+                    "Master-level reframing! You're demonstrating profound psychological flexibility.",
+                    "Transformational shift! This level of awareness creates lasting positive change."
+                ],
+                strong: [
+                    "Strong growth demonstrated! Your conscious reframing is building resilience.",
+                    "Excellent progress! You're developing sophisticated emotional regulation skills.",
+                    "Meaningful shift! Each choice like this strengthens your growth foundation."
+                ],
+                moderate: [
+                    "Solid growth step! Consistency with this practice will deepen your impact.",
+                    "Good reflective work! You're building the mental muscles for transformation.",
+                    "Positive shift! Every conscious choice moves you toward your best self."
+                ],
+                developing: [
+                    "Awareness is growing! With practice, these shifts will become more natural.",
+                    "Foundation building! Each reflection strengthens your growth capacity.",
+                    "Progress started! The cumulative effect of these choices creates change."
+                ]
+            };
+            
+            if (growthScore >= 8.5) return insights.exceptional[Math.floor(Math.random() * insights.exceptional.length)];
+            if (growthScore >= 7.0) return insights.strong[Math.floor(Math.random() * insights.strong.length)];
+            if (growthScore >= 5.0) return insights.moderate[Math.floor(Math.random() * insights.moderate.length)];
+            return insights.developing[Math.floor(Math.random() * insights.developing.length)];
+        };
+
+        const createGrowthVisualization = (history) => {
+            const recentHistory = history.slice(0, 7).reverse();
+            const chartContainer = document.getElementById('growth-chart');
+            
+            if (recentHistory.length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="text-center text-xs text-gray-400 w-full">
+                        <p>No data yet</p>
+                        <p class="mt-8">Start logging frame shifts to see your growth!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            chartContainer.innerHTML = recentHistory.map((entry, index) => {
+                const height = Math.max(10, ((entry.analysis?.growthScore || 1) / 10) * 100);
+                const date = entry.timestamp.toDate();
+                const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
+                
+                return `
+                    <div class="flex-1 flex flex-col items-center">
+                        <div class="tooltip relative group">
+                            <div class="growth-bar w-3/4 bg-gradient-to-t from-[#79e0ee] to-[#4d7d9a] rounded-t transition-all duration-500 mb-1" 
+                                 style="height: ${height}%">
+                            </div>
+                            <div class="tooltip-text invisible group-hover:visible absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 mb-2 whitespace-nowrap">
+                                Score: ${entry.analysis?.growthScore || 'N/A'}/10
+                            </div>
+                        </div>
+                        <span class="text-xs mt-1 text-gray-400">${dayLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const updateGrowthScoreDisplay = (growthScore, breakdown) => {
+            document.getElementById('growth-score-display').textContent = growthScore;
+            document.getElementById('reflection-score').textContent = breakdown.reflection;
+            document.getElementById('emotional-score').textContent = breakdown.emotional;
+            document.getElementById('cognitive-score').textContent = breakdown.cognitive;
+            
+            const scoreElement = document.getElementById('growth-score-display');
+            if (growthScore >= 8) scoreElement.className = 'text-2xl font-bold text-green-400';
+            else if (growthScore >= 6) scoreElement.className = 'text-2xl font-bold text-yellow-400';
+            else scoreElement.className = 'text-2xl font-bold text-red-400';
+        };
+
+        const updateEmotionalShiftDisplay = (emotionalShift) => {
+            const scoreElement = document.getElementById('emotional-shift-score');
+            const barElement = document.getElementById('emotional-shift-bar');
+            
+            scoreElement.textContent = emotionalShift >= 0 ? `+${emotionalShift}` : emotionalShift;
+            scoreElement.className = `text-sm ${emotionalShift >= 3 ? 'text-green-400' : emotionalShift >= 0 ? 'text-yellow-400' : 'text-red-400'}`;
+            
+            const barWidth = ((emotionalShift + 10) / 20) * 100;
+            barElement.style.width = `${barWidth}%`;
+        };
 
         const formatTime = (ms) => {
             if (ms < 0) return "00:00:00";
@@ -236,7 +1192,7 @@
             d1.setHours(0, 0, 0, 0);
             d2.setHours(0, 0, 0, 0);
             const diff = d1.getTime() - d2.getTime();
-            return diff === 86400000; // Exactly 24 hours difference
+            return diff === 86400000;
         };
         
         const canUserClaimReward = (lastClaimTimestamp) => {
@@ -244,10 +1200,9 @@
             const lastClaimTime = lastClaimTimestamp.toDate ? lastClaimTimestamp.toDate().getTime() : lastClaimTimestamp;
             const now = Date.now();
             const timeElapsed = now - lastClaimTime;
-            return timeElapsed >= 86400000; // 24 hours lockout (86,400,000 ms)
+            return timeElapsed >= 86400000;
         };
 
-        // --- Core Countdown Logic ---
         function startCountdown(lastClaimTime) {
             if (countdownInterval) clearInterval(countdownInterval);
 
@@ -259,15 +1214,11 @@
                 if (timeRemaining <= 0) {
                     clearInterval(countdownInterval);
                     countdownInterval = null;
-                    
-                    // Re-run the listener to update the metrics and button text
                     setupHistoryListener(); 
                     return;
                 }
                 
                 NEXT_MINT_COUNTDOWN.textContent = formatTime(timeRemaining);
-                
-                // Ensure UI is set for countdown mode (Button text changes)
                 COUNTDOWN_DISPLAY.classList.remove('hidden');
                 SUBMIT_BUTTON.textContent = "Log Frame Shift (Reward Locked)";
                 SUBMIT_BUTTON.classList.add('bg-gray-700', 'hover:bg-gray-600', 'text-gray-300');
@@ -276,18 +1227,14 @@
                 MESSAGE_BOX.className = 'text-center text-yellow-400';
             };
 
-            updateTimer(); // Initial call
+            updateTimer();
             countdownInterval = setInterval(updateTimer, 1000);
         }
-
-
-        // --- Metric Calculation and Listener ---
 
         function calculateDepthMetrics(history) {
             let totalDPNT = 0;
             let currentStreak = 0;
 
-            // Only consider entries that successfully claimed a reward for streak calculation
             const claimedEntries = history.filter(entry => entry.rewardClaimed).sort((a, b) => {
                 const aTime = a.timestamp.toDate ? a.timestamp.toDate().getTime() : a.timestamp;
                 const bTime = b.timestamp.toDate ? b.timestamp.toDate().getTime() : b.timestamp;
@@ -337,7 +1284,6 @@
                     if (lastStreakDate.getTime() !== currentEntryDate.getTime()) {
                         break;
                     }
-                    // Handle double claim attempt on same day (shouldn't happen with 24hr lock but for safety)
                 }
             }
 
@@ -363,7 +1309,6 @@
 
             HISTORY_CONTAINER.innerHTML = `<p id="history-loading" class="text-gray-500 text-center">Loading past Frame Shifts...</p>`;
             
-            // Clear any active countdown
             if (countdownInterval) clearInterval(countdownInterval);
             countdownInterval = null;
             COUNTDOWN_DISPLAY.classList.add('hidden');
@@ -377,21 +1322,40 @@
                     history.push(doc.data());
                 });
 
-                // Client-side sorting (Desc: most recent first)
                 history.sort((a, b) => {
                     const aTime = a.timestamp.toDate ? a.timestamp.toDate().getTime() : a.timestamp;
                     const bTime = b.timestamp.toDate ? b.timestamp.toDate().getTime() : b.timestamp;
                     return bTime - aTime;
                 });
 
-                // 1. Calculate Metrics
                 const { totalDPNT, currentStreak, lastClaimTimestamp } = calculateDepthMetrics(history);
                 updateMetrics(totalDPNT, currentStreak);
 
-                // --- UI State Management (Button and Timer) ---
+                // Enhanced UX updates
+                updateMasteryProgress(history, currentStreak);
+                provideSmartSuggestions(history);
+                checkAchievements(history, currentStreak, history[0]?.analysis?.growthScore || 0);
+
+                if (history.length > 5) {
+                    EXPORT_BUTTON.classList.remove('hidden');
+                }
+
+                if (history.length > 0) {
+                    GROWTH_ANALYTICS.classList.remove('hidden');
+                    createGrowthVisualization(history);
+                    
+                    const latestEntry = history[0];
+                    if (latestEntry.analysis) {
+                        updateEmotionalShiftDisplay(latestEntry.analysis.emotionalShift);
+                        updateGrowthScoreDisplay(latestEntry.analysis.growthScore, latestEntry.analysis.growthBreakdown);
+                        document.getElementById('insight-text').textContent = latestEntry.analysis.insight;
+                    }
+                } else {
+                    GROWTH_ANALYTICS.classList.add('hidden');
+                }
+
                 if (history.length === 0) {
                     HISTORY_CONTAINER.innerHTML = `<p class="text-gray-500 text-center py-4">No Frame Shifts logged yet. Start your growth journey!</p>`;
-                    // Set default ready state
                     SUBMIT_BUTTON.textContent = "Mint D-PNT and Log Frame Shift";
                     SUBMIT_BUTTON.classList.remove('bg-gray-700', 'hover:bg-gray-600', 'text-gray-300');
                     SUBMIT_BUTTON.classList.add('bg-[#79e0ee]', 'text-black', 'hover:bg-[#60b3c4]');
@@ -400,16 +1364,12 @@
                     return;
                 }
 
-                // 2. Determine Claim Status and Update Form Button
                 const canClaim = canUserClaimReward(lastClaimTimestamp);
 
                 if (!canClaim && lastClaimTimestamp) {
-                    // Lock active: Start the countdown and set button text to 'Log Shift Only'
                     const lastClaimTime = lastClaimTimestamp.toDate ? lastClaimTimestamp.toDate().getTime() : lastClaimTimestamp;
                     startCountdown(lastClaimTime);
-
                 } else {
-                    // Ready to claim: Ensure button and message are set correctly
                     if (countdownInterval) clearInterval(countdownInterval);
                     countdownInterval = null;
                     COUNTDOWN_DISPLAY.classList.add('hidden');
@@ -421,7 +1381,6 @@
                     MESSAGE_BOX.className = 'text-center text-green-400 font-bold';
                 }
 
-                // 3. Render History Log
                 HISTORY_CONTAINER.innerHTML = '';
                 history.forEach(entry => {
                     const date = entry.timestamp.toDate().toLocaleDateString('en-US', { 
@@ -430,17 +1389,37 @@
                     const rewardTag = entry.rewardClaimed 
                         ? `<span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">${entry.d_pnt_reward} D-PNT</span>` 
                         : `<span class="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full">Shift Logged (No Reward)</span>`;
+                    
+                    const analysisBadge = entry.analysis 
+                        ? `<span class="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full ml-1">AI Insight</span>`
+                        : '';
 
                     const item = document.createElement('div');
                     item.className = 'card p-4 rounded-lg shadow-md';
                     item.innerHTML = `
                         <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
                             <p class="text-sm font-semibold text-gray-300">${date}</p>
-                            ${rewardTag}
+                            <div class="flex gap-1">
+                                ${rewardTag}
+                                ${analysisBadge}
+                            </div>
                         </div>
                         <p class="text-xs text-gray-500 uppercase">Trigger: <span class="text-gray-200">${entry.trigger}</span></p>
                         <p class="text-xs text-gray-500 uppercase mt-1">Old Frame: <span class="text-gray-200">${entry.oldFrame}</span></p>
                         <p class="text-xs text-gray-500 uppercase mt-1">New Frame: <span class="text-gray-200">${entry.newFrame}</span></p>
+                        ${entry.analysis ? `
+                            <div class="mt-2 pt-2 border-t border-gray-800">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-green-400">Growth: ${entry.analysis.growthScore}/10</span>
+                                    <span class="text-blue-400">Emotional: ${entry.analysis.emotionalShift >= 0 ? '+' : ''}${entry.analysis.emotionalShift}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1 mt-1 text-xs">
+                                    <span class="text-green-400">R:${entry.analysis.growthBreakdown.reflection}</span>
+                                    <span class="text-blue-400">E:${entry.analysis.growthBreakdown.emotional}</span>
+                                    <span class="text-purple-400">C:${entry.analysis.growthBreakdown.cognitive}</span>
+                                </div>
+                            </div>
+                        ` : ''}
                     `;
                     HISTORY_CONTAINER.appendChild(item);
                 });
@@ -453,7 +1432,7 @@
             });
         }
         
-        // --- Submission Handler (Always allows logging, conditionally rewards D-PNT) ---
+        // Enhanced Submission Handler with Community Updates
         document.getElementById('frame-shift-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!isAuthReady || !userId || !db) {
@@ -462,9 +1441,7 @@
                 return;
             }
 
-            const originalButtonText = SUBMIT_BUTTON.textContent;
-            SUBMIT_BUTTON.disabled = true;
-            SUBMIT_BUTTON.textContent = 'Processing...';
+            showLoadingState();
 
             const trigger = document.getElementById('trigger').value.trim();
             const oldFrame = document.getElementById('old-frame').value.trim();
@@ -474,18 +1451,16 @@
                 MESSAGE_BOX.textContent = 'All three fields must be filled.';
                 MESSAGE_BOX.className = 'mt-4 text-center text-yellow-400';
                 SUBMIT_BUTTON.disabled = false;
-                SUBMIT_BUTTON.textContent = originalButtonText; // Restore original text
+                SUBMIT_BUTTON.textContent = 'Mint D-PNT and Log Frame Shift';
                 return;
             }
 
             try {
-                // Get current data for reward check
                 const historyRef = collection(db, `artifacts/${finalAppId}/users/${userId}/frame_shifts`);
                 const querySnapshot = await getDocs(query(historyRef)); 
 
                 let historyData = querySnapshot.docs.map(doc => doc.data());
                 
-                // Client-side sorting for reward check
                 historyData.sort((a, b) => {
                     const aTime = a.timestamp.toDate ? a.timestamp.toDate().getTime() : a.timestamp;
                     const bTime = b.timestamp.toDate ? b.timestamp.toDate().getTime() : b.timestamp;
@@ -499,15 +1474,16 @@
                 let dpntReward = 0;
 
                 if (canClaim) {
-                    // Check streak based on existing claimed entries (before adding the new one)
                     const { currentStreak } = calculateDepthMetrics(historyData); 
                     rewardClaimed = true;
                     dpntReward = 1;
                     
                     if ((currentStreak + 1) % 7 === 0) {
-                        dpntReward = 2; // Bonus reward
+                        dpntReward = 2;
                     }
                 }
+
+                const analysis = await analyzeFrameShift(trigger, oldFrame, newFrame);
 
                 const timestamp = new Date();
                 const docId = timestamp.getTime().toString() + Math.floor(Math.random() * 1000).toString();
@@ -519,13 +1495,17 @@
                     timestamp,
                     rewardClaimed,
                     d_pnt_reward: dpntReward,
-                    userId
+                    userId,
+                    analysis
                 };
 
                 const docRef = doc(db, `artifacts/${finalAppId}/users/${userId}/frame_shifts`, docId);
                 await setDoc(docRef, newEntry);
                 
-                // Clear form fields
+                // UPDATE COMMUNITY STATS - always count the shift, and count D-PNT if reward was claimed
+                console.log("Calling updateCommunityStats...");
+                await updateCommunityStats(rewardClaimed ? dpntReward : 0, 1);
+                
                 document.getElementById('trigger').value = '';
                 document.getElementById('old-frame').value = '';
                 document.getElementById('new-frame').value = '';
@@ -534,25 +1514,43 @@
                 if (rewardClaimed) {
                     successMessage = `Shift Logged & Reward Claimed! Minted ${dpntReward} D-PNT.`;
                     MESSAGE_BOX.className = 'text-center text-green-400 font-bold';
+                    showSuccessAnimation();
+                    
+                    // Force a refresh of community stats after a short delay
+                    setTimeout(() => {
+                        const communityRef = doc(db, `artifacts/${finalAppId}/community/stats`);
+                        getDoc(communityRef).then(doc => {
+                            if (doc.exists()) {
+                                const data = doc.data();
+                                console.log("Current community stats after update:", data);
+                                animateCounter(TOTAL_COMMUNITY_SHIFTS, data.totalShifts || 0);
+                                animateCounter(TOTAL_COMMUNITY_DEPTH, data.totalDepthMinted || 0);
+                            }
+                        });
+                    }, 1000);
+                    
                 } else {
                     successMessage = "Shift Logged to History! No D-PNT minted (lock active).";
                     MESSAGE_BOX.className = 'text-center text-yellow-400';
+                    SUBMIT_BUTTON.disabled = false;
+                    SUBMIT_BUTTON.textContent = 'Mint D-PNT and Log Frame Shift';
+                }
+                
+                if (analysis) {
+                    successMessage += ` Growth Score: ${analysis.growthScore}/10 (Emotional: ${analysis.emotionalShift >= 0 ? '+' : ''}${analysis.emotionalShift})`;
                 }
                 
                 MESSAGE_BOX.textContent = successMessage;
-                // The onSnapshot listener will handle the final button state and timer update
-                SUBMIT_BUTTON.disabled = false;
 
             } catch (error) {
                 MESSAGE_BOX.textContent = 'An error occurred during submission: ' + error.message;
                 MESSAGE_BOX.className = 'text-center text-red-400';
                 console.error("Submission Error:", error);
                 SUBMIT_BUTTON.disabled = false;
-                SUBMIT_BUTTON.textContent = originalButtonText; // Restore original text
+                SUBMIT_BUTTON.textContent = 'Mint D-PNT and Log Frame Shift';
             }
         });
 
     </script>
 </body>
 </html>
-
